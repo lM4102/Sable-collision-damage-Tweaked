@@ -267,9 +267,7 @@ public final class SablePreSolverDamage {
     private static final class UniversalFragileCallback implements BlockSubLevelCollisionCallback {
         @Override
         public CollisionResult sable$onCollision(final BlockPos pos, final Vector3d hitPos, final double impactVelocity) {
-            //Target pos is the same as pos
-            //HitPos is pos but with more decimals
-            //There is a LOT of this event, changing between hit on the world and hit on sublevel
+
             final double triggerVelocity = Config.MIN_BREAK_SPEED.get();
             final SubLevelPhysicsSystem system = SubLevelPhysicsSystem.getCurrentlySteppingSystem();
             final ServerLevel level = system.getLevel();
