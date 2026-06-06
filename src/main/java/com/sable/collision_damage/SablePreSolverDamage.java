@@ -7,6 +7,7 @@ import dev.ryanhcode.sable.companion.math.BoundingBox3d;
 import dev.ryanhcode.sable.companion.math.JOMLConversion;
 import dev.ryanhcode.sable.companion.math.Pose3d;
 import dev.ryanhcode.sable.neoforge.event.ForgeSablePostPhysicsTickEvent;
+import dev.ryanhcode.sable.physics.config.block_properties.PhysicsBlockPropertyHelper;
 import dev.ryanhcode.sable.sublevel.ServerSubLevel;
 import dev.ryanhcode.sable.sublevel.SubLevel;
 import dev.ryanhcode.sable.sublevel.plot.EmbeddedPlotLevelAccessor;
@@ -16,6 +17,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.block.IceBlock;
 import net.minecraft.world.level.block.LeavesBlock;
 import net.minecraft.world.level.block.state.BlockState;
@@ -267,21 +269,19 @@ public final class SablePreSolverDamage {
         public CollisionResult sable$onCollision(final BlockPos pos, final Vector3d hitPos, final double impactVelocity) {
             //Target pos is the same as pos
             //HitPos is pos but with more decimals
-            //There is a LOT of this event
+            //There is a LOT of this event, changing between hit on the world and hit on sublevel
             final double triggerVelocity = Config.MIN_BREAK_SPEED.get();
-            if (impactVelocity * impactVelocity < triggerVelocity * triggerVelocity) {
-                return CollisionResult.NONE;
-            }
-
             final SubLevelPhysicsSystem system = SubLevelPhysicsSystem.getCurrentlySteppingSystem();
             final ServerLevel level = system.getLevel();
             final CollisionTarget target = resolveCollisionTarget(level, pos, hitPos);
+            final BlockState state = target.state();
+            final double blockMass = PhysicsBlockPropertyHelper.getMass(EmptyBlockGetter.INSTANCE,pos,state);
 
-            if (target == null) {
-                return CollisionResult.NONE;
+            if (Math.abs(impactVelocity) < triggerVelocity * blockMass) {
+                    return CollisionResult.NONE;
             }
 
-            final BlockState state = target.state();
+
             if (state.getBlock() instanceof LeavesBlock && state.getValue(LeavesBlock.PERSISTENT)) {
                 return CollisionResult.NONE;
             }
